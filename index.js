@@ -1,7 +1,7 @@
 const { play, stop, summon, dev, lista, taylor, add, next, qClean} = require ('./commands')
 const { Client } = require ('discord.js');
 const bot = new Client();
-const token = "Nzc5NjkwMDkyNDAyOTY2NTM5.X7kM-w.Chni3n0r-rcF1lVbp26nA0blxfA";
+const token = "Nzc5NjkwMDkyNDAyOTY2NTM5.X7kM-w.MleswaPkNrxZrXUsjc5JMGxN-0I";
 
 bot.login(token)
 

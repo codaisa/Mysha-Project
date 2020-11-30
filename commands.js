@@ -158,8 +158,7 @@ async function dev(msg) {
     const embed = {
         "title": "Você deseja me conhecer melhor? basta me seguir!",
         "description": "*Este bot ainda está em desenvolvimento",
-        "url": "https://instagram.com/sa_filho",
-        "color": 14712189,
+         "color": 14712189,
         "timestamp": "2020-11-29T01:23:45.633Z",
         "footer": {
             "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png",
