@@ -1,3 +1,5 @@
+const PORT = process.env.PORT || 3000;
+
 const { play, stop, summon, dev, lista, add, next, qClean, comandos,  queue, remove} = require('./commands')
 const { getPage } = require('./utilities');
 const { Client } = require('discord.js');
