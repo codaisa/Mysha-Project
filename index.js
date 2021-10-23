@@ -1,4 +1,6 @@
 const PORT = process.env.PORT || 3000;
+const express = require('express')
+const app = express()
 
 const { play, stop, summon, dev, lista, add, next, qClean, comandos,  queue, remove} = require('./commands')
 const { getPage } = require('./utilities');
@@ -6,6 +8,10 @@ const { Client } = require('discord.js');
 const bot = new Client();
 const token = "OTAxMTE0OTgzOTAxOTg2ODE2.YXLKug.z31tq1UatsP4HsDHh2e7kaeSL8o";
 const prefix = '!';
+
+app.listen(PORT, () => {
+    console.log(`Our app is running on port ${ PORT }`);
+});
 
 bot.on("ready", () => {
 
