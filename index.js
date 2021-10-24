@@ -81,7 +81,6 @@ bot.on("message", async msg => {
 });
 
 
-
 function getCommandName(prefix, content) {
     return content
         .slice(prefix.lenght)
