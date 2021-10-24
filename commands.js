@@ -1,6 +1,9 @@
+const { getTracks } = require('spotify-url-info')
+const DeezerPublicApi = require("deezer-public-api")
 const youtubeM = require("ytdl-core");
 const searchYT = require('yt-search');
-const { concat } = require("ffmpeg-static");
+let deezer = new DeezerPublicApi();
+
 var queue = [];
 var queueTitle = [];
 var queueTime = [];
@@ -11,8 +14,14 @@ async function play(msg, next, ...args) {
     if (queue.length >= 0 & next == true) {
 
         const vc = msg.member.voice.channel;
+
+        if (vc == null || vc == undefined) {
+            msg.reply("Você precisa estar em um canal de voz para me acionar. ")
+            return null;
+        }
+
         const connection = await vc.join();
-        let video = await findVideo(args.join(' '));
+        let video = await findVideo(args.join(' '), msg);
 
         if (video) {
             insertQueue(video);
@@ -53,7 +62,7 @@ async function play(msg, next, ...args) {
         }
     } else {
 
-        const video = await findVideo(args.join(' '));
+        const video = await findVideo(args.join(' '), msg);
         if (video) {
             insertQueue(video);
         }
@@ -62,12 +71,12 @@ async function play(msg, next, ...args) {
     }
 }
 
-async function remove(msg, ...args){
+async function remove(msg, ...args) {
     let forRemove = args.join(' ');
     let songRemoved = queueTitle[forRemove]
-    queue.splice(forRemove,1);
-    queueTime.splice(forRemove,1);
-    queueTitle.splice(forRemove,1);
+    queue.splice(forRemove, 1);
+    queueTime.splice(forRemove, 1);
+    queueTitle.splice(forRemove, 1);
 
     msg.reply(`o som ${songRemoved} foi removido da lista.`);
 }
@@ -158,14 +167,14 @@ async function lista(msg) {
     } else {
         let str = "";
         queueTitle.map((value, index) => {
-            if(index <= 10){
+            if (index <= 10) {
                 if (index == 0) {
                     str += ` => ${value} - ${queueTime[index]}s [ TOCANDO AGORA ]\n\n`
                 } else {
                     str += `${index}- ${value} - ${queueTime[index]}\n`
                 }
-            } else{
-                if(index == 11){
+            } else {
+                if (index == 11) {
                     str += `+ ${queue.length} títulos.\n`
                 }
             }
@@ -175,7 +184,7 @@ async function lista(msg) {
 }
 
 async function add(msg, ...args) {
-    const video = await findVideo(args.join(' '));
+    const video = await findVideo(args.join(' '), msg);
     if (video) {
         insertQueue(video);
     }
@@ -191,8 +200,20 @@ async function add(msg, ...args) {
     msg.reply({ embed })
 }
 
-async function findVideo(query) {
+async function findVideo(query, msg) {
     let result;
+
+    if(query.indexOf("playlist") != -1){
+        const embed = {
+            "title": `Playlist detectada!`,
+            "description": `\`Espere até a reprodução.\``,
+            "thumbnail": {
+            },
+            "color": 14712189
+        }
+        
+        msg.reply({embed})
+    }
 
     if (query.indexOf("https") == -1) {
         result = await searchYT(query);
@@ -201,28 +222,60 @@ async function findVideo(query) {
             : null;
     } else {
         try {
+            if (query.indexOf("youtube") != -1) {
+                if (query.indexOf("list=") != -1) {
+                    if (query.indexOf("music.youtube") != -1) {
+                        query = query.substring(query.indexOf("?v=") + 3, 100)
+                        result = await searchYT({ videoId: query });
+                        return result;
+                    }
+                    query = query.substring(query.indexOf("list=") + 5, 100)
+                    if (query.indexOf("&") != -1) {
+                        query = query.substring(0, query.indexOf("&"))
+                    }
+                    result = await searchYT({ listId: query });
+                    return result.videos
 
-            if (query.indexOf("list=") != -1) {
-                if (query.indexOf("music.youtube") != -1) {
+                } else {
                     query = query.substring(query.indexOf("?v=") + 3, 100)
+                    end = query.indexOf("?") != -1 ? query.indexOf("?") : 100;
+                    query = query.substring(0, end);
+
+                    console.log(query)
                     result = await searchYT({ videoId: query });
+                    console.log(result)
                     return result;
                 }
-                query = query.substring(query.indexOf("list=") + 5, 100)
-                if (query.indexOf("&") != -1) {
-                    query = query.substring(0, query.indexOf("&"))
+            } else if (query.indexOf("spotify") != -1) {
+                result = await getTracks(query);
+                let fromyt = []
+                result.splice(15, 100)
+                fromyt = await Promise.all(result.map(async value => {
+                    toReturn = await searchYT(value.name)
+                    toReturn = toReturn.videos[0]
+                    return toReturn
+                }))
+                return fromyt;
+            } else if (query.indexOf("deezer") != -1) {
+                if (query.indexOf("playlist") != -1) {
+                    let fromyt = [];
+                    end = query.indexOf("?") != -1 ? query.indexOf("?") : 100;
+                    query = query.substring(query.indexOf("playlist") + 8, end)
+                    result = await deezer.playlist.tracks(query)
+                    fromyt = await Promise.all(result.data.map(async value => {
+                        toReturn = await searchYT(value.title)
+                        toReturn = toReturn.videos[0];
+                        return toReturn
+                    }))
+                    return fromyt
+                } else {
+                    end = query.indexOf("?") != -1 ? query.indexOf("?") : 100;
+                    query = query.substring(query.indexOf("track") + 5, end)
+                    result = await deezer.track(query);
+                    result = await searchYT(result.title)
+                    return result.videos[0];
                 }
-                result = await searchYT({ listId: query });
-                return result.videos
-
-            } else {
-                query = query.substring(query.indexOf("?v=") + 3, 100)
-                console.log(query)
-                result = await searchYT({ videoId: query });
-                return result;
             }
-
-
         } catch (e) {
             console.log(e);
             return null;
@@ -235,16 +288,16 @@ async function insertQueue(video) {
         video = [video]
     }
     video.map((value, index) => {
-            let stream;
-            if (value.url != undefined) {
-                stream = youtubeM(value.url, { filter: 'audioonly' });
-                queueTime.push(value.seconds);
-            } else {
-                stream = youtubeM(value.videoId, { filter: 'audioonly' });
-                queueTime.push(value.duration.seconds);
-            }
-            queue.push(stream);
-            queueTitle.push(value.title);
+        let stream;
+        if (value.url != undefined) {
+            stream = youtubeM(value.url, { filter: 'audioonly' });
+            queueTime.push(value.seconds);
+        } else {
+            stream = youtubeM(value.videoId, { filter: 'audioonly' });
+            queueTime.push(value.duration.seconds);
+        }
+        queue.push(stream);
+        queueTitle.push(value.title);
     })
 }
 
