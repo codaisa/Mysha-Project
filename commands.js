@@ -6,13 +6,11 @@ let deezer = new DeezerPublicApi();
 
 var queue = [];
 var queueTitle = [];
-var queueTime = [];
 let onPlaying;
 
 async function play(msg, next, ...args) {
 
     if (queue.length >= 0 & next == true) {
-
         const vc = msg.member.voice.channel;
 
         if (vc == null || vc == undefined) {
@@ -42,7 +40,6 @@ async function play(msg, next, ...args) {
 
                     onPlaying.on('finish', end => {
                         queue.shift();
-                        queueTime.shift();
                         queueTitle.shift();
 
                         if (queue.length > 0) {
@@ -75,7 +72,6 @@ async function remove(msg, ...args) {
     let forRemove = args.join(' ');
     let songRemoved = queueTitle[forRemove]
     queue.splice(forRemove, 1);
-    queueTime.splice(forRemove, 1);
     queueTitle.splice(forRemove, 1);
 
     msg.reply(`o som ${songRemoved} foi removido da lista.`);
@@ -84,7 +80,6 @@ async function remove(msg, ...args) {
 async function qClean(msg) {
     msg.reply("A lista agora está limpa.")
     queue.length -= queue.length;
-    queueTime.length -= queueTime.length
     queueTitle.length -= queueTitle.length
     stop(msg);
 }
@@ -155,7 +150,6 @@ async function comandos(msg) {
 
 async function next(msg) {
     queue.shift();
-    queueTime.shift();
     queueTitle.shift();
     msg.reply("avançando para a próxima.")
     play(msg, true, "vazio")
@@ -169,9 +163,9 @@ async function lista(msg) {
         queueTitle.map((value, index) => {
             if (index <= 10) {
                 if (index == 0) {
-                    str += ` => ${value} - ${queueTime[index]}s [ TOCANDO AGORA ]\n\n`
+                    str += ` => ${value} - [ TOCANDO AGORA ]\n\n`
                 } else {
-                    str += `${index}- ${value} - ${queueTime[index]}\n`
+                    str += `${index}- ${value}\n`
                 }
             } else {
                 if (index == 11) {
@@ -241,9 +235,7 @@ async function findVideo(query, msg) {
                     end = query.indexOf("?") != -1 ? query.indexOf("?") : 100;
                     query = query.substring(0, end);
 
-                    console.log(query)
                     result = await searchYT({ videoId: query });
-                    console.log(result)
                     return result;
                 }
             } else if (query.indexOf("spotify") != -1) {
@@ -291,10 +283,8 @@ async function insertQueue(video) {
         let stream;
         if (value.url != undefined) {
             stream = youtubeM(value.url, { filter: 'audioonly' });
-            queueTime.push(value.seconds);
         } else {
             stream = youtubeM(value.videoId, { filter: 'audioonly' });
-            queueTime.push(value.duration.seconds);
         }
         queue.push(stream);
         queueTitle.push(value.title);
@@ -353,5 +343,3 @@ module.exports.next = next;
 module.exports.qClean = qClean;
 module.exports.comandos = comandos;
 module.exports.queue = getQueue;
-
-

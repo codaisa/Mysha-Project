@@ -6,7 +6,8 @@ const { play, stop, summon, dev, lista, add, next, qClean, comandos,  queue, rem
 const { getPage } = require('./utilities');
 const { Client } = require('discord.js');
 const bot = new Client();
-const token = "OTAxMTE0OTgzOTAxOTg2ODE2.YXLKug.z31tq1UatsP4HsDHh2e7kaeSL8o";
+//const token = "OTAxMTE0OTgzOTAxOTg2ODE2.YXLKug.z31tq1UatsP4HsDHh2e7kaeSL8o";
+const token = "OTAxODUyMzMwOTgxNDkwNzg4.YXV5bw.88XnDLJtoJBCUKMneb-kBoKknMs"
 const prefix = '!';
 
 app.listen(PORT, () => {
@@ -34,7 +35,7 @@ bot.on("ready", () => {
         "description": "[Em Desenvolvimento] "
     }
 
-    var textChannel = bot.channels.cache.get("901121346078117958");
+    var textChannel = bot.channels.cache.get("676917684130283541");
     textChannel.send({ embed })
 });
 
